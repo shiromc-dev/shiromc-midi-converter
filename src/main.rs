@@ -4,14 +4,15 @@ use midi_toolkit::{
 	io::MIDIFile,
 	pipe,
 	sequence::{
+		TimeCaster,
 		event::{cancel_tempo_events, merge_events_array, scale_event_time},
-		to_vec, unwrap_items, TimeCaster,
+		to_vec, unwrap_items,
 	},
 };
-use serde::ser::SerializeStruct;
 use serde::Serialize;
-use std::path::Path;
+use serde::ser::SerializeStruct;
 use std::{collections::BTreeMap, path::PathBuf};
+use std::fs;
 
 #[derive(Serialize)]
 struct SongData {
@@ -70,9 +71,6 @@ fn main() {
 
 	let mut time = 0.0;
 
-	// Extract filename without extension from the path
-	let filename = Path::new(path).file_stem().unwrap().to_str().unwrap();
-
 	let mut song_data = SongData {
 		maxtick: 0,
 		pitchint: 0,
@@ -111,13 +109,9 @@ fn main() {
 	#[cfg(not(debug_assertions))]
 	let json_data = serde_json::to_string(&song_data).unwrap();
 
+	// Determine the output path
+	let output_path = args.midi_file.with_extension("json");
+
 	// Save to file
-	std::fs::write(
-		format!(
-			"C:/Users/kazu/Desktop/File/Rust/shiromc-midi-converter/{}.json",
-			filename
-		),
-		json_data,
-	)
-	.expect("Unable to write file");
+	fs::write(output_path, json_data).expect("Unable to write file");
 }
